@@ -1,17 +1,17 @@
-#***********************************************************************************************
-#                                                                                          
-#         __       _                      _____           _       __     ____             __  
-#  ____  / /__    (_)___  ____  ____     / ___/__________(_)___  / /_   / __ \____ ______/ /__
-# /_  / / / _ \  / / __ \/ __ \/ __ \    \__ \/ ___/ ___/ / __ \/ __/  / /_/ / __ `/ ___/ //_/
-#  / /_/ /  __/ / / /_/ / /_/ / /_/ /   ___/ / /__/ /  / / /_/ / /_   / ____/ /_/ / /__/ ,<   
-# /___/_/\___/_/ /\____/\____/\____/   /____/\___/_/  /_/ .___/\__/  /_/    \__,_/\___/_/|_|  
-#           /___/                                      /_/                                    
-# 
-#***********************************************************************************************
+#**************************************************************************************************
+#*                                                                                                *
+#*          __       _                      _____           _       __     ____             __    *
+#*   ____  / /__    (_)___  ____  ____     / ___/__________(_)___  / /_   / __ \____ ______/ /__  *
+#*  /_  / / / _ \  / / __ \/ __ \/ __ \    \__ \/ ___/ ___/ / __ \/ __/  / /_/ / __ `/ ___/ //_/  *
+#*   / /_/ /  __/ / / /_/ / /_/ / /_/ /   ___/ / /__/ /  / / /_/ / /_   / ____/ /_/ / /__/ ,<     *
+#*  /___/_/\___/_/ /\____/\____/\____/   /____/\___/_/  /_/ .___/\__/  /_/    \__,_/\___/_/|_|    *
+#*            /___/                                      /_/                                      *
+#*                                                                                                *
+#**************************************************************************************************
 # Script Version 1.0.0
 # Default RouterOS Configuration Script
 # Model: RB5009UG+S+IN
-#***********************************************************************************************
+#**************************************************************************************************
 
 /system/script environment
 
@@ -32,13 +32,13 @@
 :global ServerIP "<ip_address>";       #Modify VPN server IP as needed
 :global ServerPort "<port>";           #Modify VPN server port as needed
 
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #WAN Interface Setup
 /ip dhcp-client add disabled=no interface=ether1
 /ip/dns/ set servers=$DNSservers
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #RouterOS Update and Firmware Upgrade
@@ -46,14 +46,14 @@
 /system package update check-for-updates; /system package update install;
 /system routerboard upgrade;
 :execute {/system reboot};
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #Default User and identities setup
 /user/add name=$UserName password=$UserPasswrd group=full
 /user/remove admin 
 /system/identity/set name=$identities
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #Bridge and LAN Interfaces Setup
@@ -67,7 +67,7 @@
 /interface bridge port add bridge=$BridgeName interface=ether6
 /interface bridge port add bridge=$BridgeName interface=ether7
 /interface bridge port add bridge=$BridgeName interface=ether8
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #DHCP Server Setup
@@ -75,7 +75,7 @@
 /ip dhcp-server add address-pool="dhcp_pool" disabled=no interface=$BridgeName name="DHCP" lease-time=1d
 /ip dhcp-server network add address=$NetworkAddress gateway=$gatewayAddress dns-server=$gatewayAddress ntp-server=$gatewayAddress
 /ip dns set allow-remote-requests=yes
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #NTP Client Setup
@@ -83,14 +83,14 @@
 /system ntp client servers add address="sk.pool.ntp.org"
 /system/clock/ set time-zone-name=Europe/Bratislava
 /system ntp server set enabled=yes multicast=yes
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #Services Setup
 /ip service disable telnet,ftp,www,api,api-ssl
 /ip service set winbox port=7878 #Change Winbox port if needed
 /ip neighbor discovery-settings set discover-interface-list=none
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #Interface List Setup
@@ -98,7 +98,7 @@
 /interface list add name=WAN
 /interface list member add list=LAN interface=$BridgeName
 /interface list member add list=WAN interface=ether1
-#***********************************************************************************************
+#**************************************************************************************************
 
 
 #Default Firewall Setup
@@ -137,4 +137,4 @@ add chain=input action=drop in-interface-list=WAN comment="#drop all input from 
 /ppp profile add name=CustomProfile interface-list=LAN
 /interface ovpn-client/ add name=VPNtunel connect-to=$ServerIP port=$ServerPort mode=ip user=$VPNUser password=$VPNPassword profile=CustomProfile certificate=Cert cipher=aes256-cbc
 /ip/route/ add dst-address=10.10.10.0/24 gateway=VPNtunel 
-#***********************************************************************************************
+#**************************************************************************************************
