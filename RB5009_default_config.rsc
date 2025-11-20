@@ -8,9 +8,14 @@
 #*            /___/                                      /_/                                      *
 #*                                                                                                *
 #**************************************************************************************************
-# Script Version 1.0.0
-# Default RouterOS Configuration Script
-# Model: RB5009UG+S+IN
+#
+# Script Name   : RB5009_default_config.ps1
+# Author        : zlejooo
+# Created.      : 2025-11-20
+# Version.      : 1.0.0
+# Description   : Default custom configuration for MikroTik RB5009UG+S+IN router
+# Requirements  :
+# Notes         :
 #**************************************************************************************************
 
 /system/script environment
@@ -22,10 +27,10 @@
 :global UserPassword "userpassword";                   #Modify password as needed
 :global identities "Router Identity Name";             #Modify identity name as needed
 :global BridgeName "BR01";                             #Modify bridge name as needed
-:global NetworkAddress "10.39.100.0/24";               #Modify LAN network as needed 
-:global gatewayAddress "10.39.100.1";                  #Modify Gateway address as needed 
-:global BridgeIPaddress  "10.39.100.1/24";             #Modify Bridge IP address as needed
-:global DHCPpool "10.39.100.100-10.39.100.250";        #Modify DHCP pool as needed
+:global NetworkAddress "192.168.1.0/24";               #Modify LAN network as needed 
+:global gatewayAddress "192.168.1.1";                  #Modify Gateway address as needed 
+:global BridgeIPaddress  "192.168.1.1/24";             #Modify Bridge IP address as needed
+:global DHCPpool "192.168.1.100-192.168.1.250";        #Modify DHCP pool as needed
 
 :global VPNUser "UserName";            #Modify VPN username as needed
 :global VPNPassword "UserPassword";    #Modify VPN password as needed
@@ -87,7 +92,8 @@
 
 
 #Services Setup
-/ip service disable telnet,ftp,www,api,api-ssl
+/ip service disable telnet,ftp,api,api-ssl
+/ip service set www port=8080 #Change www port if needed
 /ip service set winbox port=7878 #Change Winbox port if needed
 /ip neighbor discovery-settings set discover-interface-list=none
 #**************************************************************************************************
@@ -128,7 +134,7 @@ add chain=forward action=drop connection-state=new connection-nat-state=!dstnat 
 add chain=input action=drop in-interface-list=WAN comment="#drop all input from WAN"
 
 
-#VPN Setup
+#VPN Client Setup with custom default route
 :global VPNUser "UserName";            #Modify VPN username as needed
 :global VPNPassword "UserPassword";    #Modify VPN password as needed
 :global ServerIP "<ip_address>";       #Modify VPN server IP as needed
@@ -136,5 +142,6 @@ add chain=input action=drop in-interface-list=WAN comment="#drop all input from 
 
 /ppp profile add name=CustomProfile interface-list=LAN
 /interface ovpn-client/ add name=VPNtunel connect-to=$ServerIP port=$ServerPort mode=ip user=$VPNUser password=$VPNPassword profile=CustomProfile certificate=Cert cipher=aes256-cbc
-/ip/route/ add dst-address=10.10.10.0/24 gateway=VPNtunel 
+
+/ip/route/ add dst-address=10.10.10.0/24 gateway=VPNtunel #Set your desired default route via VPN
 #**************************************************************************************************
