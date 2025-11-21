@@ -9,18 +9,21 @@
 #*                                                                                                *
 #**************************************************************************************************
 #
-# Script Name   : RB5009_default_config.ps1
+# Script Name   : RB5009_default_config.rsc
 # Author        : zlejooo
-# Created.      : 2025-11-20
-# Version.      : 1.0.0
+# Created       : 2025-11-20
+# Updated       : 2025-11-21
+# Version.      : 1.0.1
 # Description   : Default custom configuration for MikroTik RB5009UG+S+IN router
 # Requirements  :
-# Notes         :
+# Notes         : 
+#                 Tested on ROS 7.20.4 with RB5009UG+S+
+#                 This script is designed to be executed in sections, NOT as a single run.
 #**************************************************************************************************
 
 /system/script environment
 
-# Global Variables - Modify as needed
+# Global Variables - Modify as needed before start
 
 :global DNSservers "1.1.1.1,8.8.8.8,8.8.4.4";          #Modify DNS servers as needed
 :global UserName "username";                           #Modify username as needed
@@ -31,6 +34,7 @@
 :global gatewayAddress "192.168.1.1";                  #Modify Gateway address as needed 
 :global BridgeIPaddress  "192.168.1.1/24";             #Modify Bridge IP address as needed
 :global DHCPpool "192.168.1.100-192.168.1.250";        #Modify DHCP pool as needed
+:global LanInterfaces {"ether2";"ether3";"ether4";"ether5";"ether6";"ether7";"ether8"} #Modify as needed
 
 :global VPNUser "UserName";            #Modify VPN username as needed
 :global VPNPassword "UserPassword";    #Modify VPN password as needed
@@ -55,7 +59,7 @@
 
 
 #Default User and identities setup
-/user/add name=$UserName password=$UserPasswrd group=full
+/user/add name=$UserName password=$UserPassword group=full
 /user/remove admin 
 /system/identity/set name=$identities
 #**************************************************************************************************
@@ -65,13 +69,10 @@
 /interface bridge add name=$BridgeName
 /ip address add address=$BridgeIPaddress interface=$BridgeName
 
-/interface bridge port add bridge=$BridgeName interface=ether2
-/interface bridge port add bridge=$BridgeName interface=ether3
-/interface bridge port add bridge=$BridgeName interface=ether4
-/interface bridge port add bridge=$BridgeName interface=ether5
-/interface bridge port add bridge=$BridgeName interface=ether6
-/interface bridge port add bridge=$BridgeName interface=ether7
-/interface bridge port add bridge=$BridgeName interface=ether8
+:foreach interface in=$LanInterfaces do={
+  /interface bridge port add bridge=$BridgeName interface=$interface
+}
+
 #**************************************************************************************************
 
 
@@ -110,7 +111,7 @@
 #Default Firewall Setup
 /ip firewall nat add chain=srcnat out-interface-list=WAN action=masquerade comment="NAT for LAN to WAN"
 
-/ip firewall filter
+/ip/firewall/filter
 add chain=input action=accept protocol=tcp dst-port=7878,22 in-interface-list=WAN comment="#TEMP!! accept management from WAN"
 add chain=input action=accept protocol=tcp dst-port=7878,22 in-interface-list=LAN comment="#accept management from LAN"
 
@@ -135,11 +136,6 @@ add chain=input action=drop in-interface-list=WAN comment="#drop all input from 
 
 
 #VPN Client Setup with custom default route
-:global VPNUser "UserName";            #Modify VPN username as needed
-:global VPNPassword "UserPassword";    #Modify VPN password as needed
-:global ServerIP "<ip_address>";       #Modify VPN server IP as needed
-:global ServerPort "<port>";           #Modify VPN server port as needed
-
 /ppp profile add name=CustomProfile interface-list=LAN
 /interface ovpn-client/ add name=VPNtunel connect-to=$ServerIP port=$ServerPort mode=ip user=$VPNUser password=$VPNPassword profile=CustomProfile certificate=Cert cipher=aes256-cbc
 
